@@ -21,33 +21,29 @@
 # #         return Response({"message": "Hello, World!"}, status=status.HTTP_200_OK)
 
 # from django.core.mail import send_mail
-# from django.http import JsonResponse
 # from rest_framework.decorators import api_view
 # from rest_framework.response import Response
-# from rest_framework import status
+# from django.conf import settings
 
 # @api_view(['POST'])
 # def send_email(request):
-#     name = request.data.get('name')
-#     email = request.data.get('email')
-#     message = request.data.get('message')
+#     if request.method == 'POST':
+#         name = request.data.get('name')
+#         user_email = request.data.get('email')
+#         message = request.data.get('message')
 
-#     if name and email and message:
-#         # Compose the email content
-#         subject = f"Portfolio Contact Form Submission from {name}"
-#         email_message = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}"
-
-#         # Send the email
+#         if not name or not user_email or not message:
+#             return Response({"error": "All fields are required."}, status=400)
+#         email_subject = f"New Contact Form Submission from {name}"
+#         email_message = f"Name: {name}\nEmail: {user_email}\n\nMessage:\n{message}"
 #         send_mail(
-#             subject,
-#             email_message,
-#             'amaanpoonawala05@gmail.com',  # Replace with your email
-#             ['amaanhannan0@gmail.com'],  # Replace with the recipient's email
+#             subject=email_subject,
+#             message=email_message,
+#             from_email=user_email,  
+#             recipient_list=[settings.EMAIL_HOST_USER],
 #             fail_silently=False,
 #         )
-#         return Response({'message': 'Email sent successfully!'}, status=status.HTTP_200_OK)
-#     else:
-#         return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+#         return Response({"success": "Email sent successfully!"})
 
 from django.core.mail import send_mail
 from rest_framework.decorators import api_view
@@ -56,25 +52,26 @@ from django.conf import settings
 
 @api_view(['POST'])
 def send_email(request):
-    if request.method == 'POST':
-        name = request.data.get('name')
-        user_email = request.data.get('email')
-        message = request.data.get('message')
+    name = request.data.get('name')
+    user_email = request.data.get('email')
+    message = request.data.get('message')
 
-        if not name or not user_email or not message:
-            return Response({"error": "All fields are required."}, status=400)
+    if not name or not user_email or not message:
+        return Response({"error": "All fields are required."}, status=400)
 
-        # Format the email content
-        email_subject = f"New Contact Form Submission from {name}"
-        email_message = f"Name: {name}\nEmail: {user_email}\n\nMessage:\n{message}"
+    # Format the email content
+    email_subject = f"New Contact Form Submission from {name}"
+    email_message = f"Name: {name}\nEmail: {user_email}\n\nMessage:\n{message}"
 
-        # Send email to yourself (recipient)
+    try:
         send_mail(
             subject=email_subject,
             message=email_message,
-            from_email=user_email,  # The sender is the user's email
-            recipient_list=[settings.EMAIL_HOST_USER],  # Your email (recipient)
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.EMAIL_HOST_USER],
             fail_silently=False,
+            headers={'Reply-To': user_email}
         )
-
         return Response({"success": "Email sent successfully!"})
+    except Exception as e:
+        return Response({"error": "Failed to send email.", "details": str(e)}, status=500)
