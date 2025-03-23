@@ -25,6 +25,28 @@ def send_email(request):
         )
         return Response({"success": "Email sent successfully!"})
 
+@api_view(['POST'])
+def send_email_lab(request):
+    name = request.data.get('fullName')  
+    user_email = request.data.get('email')
+    phone = request.data.get('phone')
+    medicare_id = request.data.get('medicareId')
+
+    if not name or not user_email or not phone or not medicare_id:
+        return Response({"error": "All fields are required."}, status=400)
+
+    email_subject = f"Contact Form Submission from {name}"
+    email_message = f"Name: {name}\nEmail: {user_email}\nPhone: {phone}\nMedicare ID: {medicare_id}"
+
+    send_mail(
+        subject=email_subject,
+        message=email_message,
+        from_email=user_email,
+        recipient_list=[os.getenv('EMAIL_HOST_USER') ],
+        fail_silently=False,
+    )
+    return Response({"success": "Email sent successfully!"})
+
 @api_view(['GET'])
 def health_check(request):
     return Response({"status": "Server is awake!"}, status=200)
