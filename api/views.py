@@ -42,7 +42,7 @@ def send_email_lab(request):
         subject=email_subject,
         message=email_message,
         from_email=user_email,
-        recipient_list=[os.getenv('EMAIL_HOST_USER') ],
+        recipient_list=[settings.EMAIL_HOST_USER],
         fail_silently=False,
     )
     return Response({"success": "Email sent successfully!"})
